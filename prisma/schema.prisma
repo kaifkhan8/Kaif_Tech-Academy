@@ -1,0 +1,174 @@
+// Kaif Tech Academy Database Schema
+// Modern e-learning platform with role-based authentication
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  phone         String?
+  password      String
+  role          Role      @default(STUDENT)
+  avatar        String?
+  isVerified    Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  enrollments   Enrollment[]
+  progress      Progress[]
+  certificates  Certificate[]
+  
+  @@map("users")
+}
+
+model Course {
+  id            String    @id @default(cuid())
+  title         String
+  description   String
+  shortDesc     String?
+  thumbnail     String?
+  price         Float
+  originalPrice Float?
+  category      String
+  level         Level     @default(BEGINNER)
+  duration      Int       // in hours
+  language      String    @default("Hindi")
+  isPublished   Boolean   @default(false)
+  isFeatured    Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  modules       Module[]
+  enrollments   Enrollment[]
+  reviews       Review[]
+  
+  @@map("courses")
+}
+
+model Module {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  order       Int
+  courseId    String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons     Lesson[]
+  
+  @@map("modules")
+}
+
+model Lesson {
+  id          String      @id @default(cuid())
+  title       String
+  description String?
+  content     String?     // Rich text content
+  videoUrl    String?
+  duration    Int?        // in minutes
+  order       Int
+  moduleId    String
+  type        LessonType  @default(VIDEO)
+  isPreview   Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  // Relations
+  module      Module      @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress    Progress[]
+  
+  @@map("lessons")
+}
+
+model Enrollment {
+  id          String    @id @default(cuid())
+  userId      String
+  courseId    String
+  enrolledAt  DateTime  @default(now())
+  completedAt DateTime?
+  progress    Float     @default(0) // percentage
+  
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, courseId])
+  @@map("enrollments")
+}
+
+model Progress {
+  id          String    @id @default(cuid())
+  userId      String
+  lessonId    String
+  completed   Boolean   @default(false)
+  watchTime   Int       @default(0) // in seconds
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, lessonId])
+  @@map("progress")
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int      // 1-5 stars
+  comment   String?
+  userId    String
+  courseId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, courseId])
+  @@map("reviews")
+}
+
+model Certificate {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  issuedAt  DateTime @default(now())
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("certificates")
+}
+
+// Enums
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+enum Level {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum LessonType {
+  VIDEO
+  TEXT
+  QUIZ
+  ASSIGNMENT
+}
