@@ -2,6 +2,8 @@
 
 A modern educational platform built with Next.js 15, TypeScript, and Tailwind CSS.
 
+![Deployment Status](https://img.shields.io/badge/deployment-ready-brightgreen)
+
 ## Features
 
 - 🚀 **Modern Tech Stack**: Next.js 15, TypeScript, Tailwind CSS
